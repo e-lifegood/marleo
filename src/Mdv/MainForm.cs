@@ -135,6 +135,13 @@ internal sealed class MainForm : Form
         core.NewWindowRequested += (_, a) => { a.Handled = true; OpenExternal(a.Uri); };
 
         core.Navigate($"https://{AppHost}/index.html");
+
+        // Screenshot/test runs must always finish, even if the page never reports back.
+        if (_options.ScreenshotPath != null)
+        {
+            await Task.Delay(20000);
+            OnSettled();
+        }
     }
 
     // ---------------------------------------------------------------- page → host

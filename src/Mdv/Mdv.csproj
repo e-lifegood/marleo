@@ -44,7 +44,9 @@
     <Message Importance="high" Text="web/vendor is missing: running npm ci + npm run vendor" />
     <Exec WorkingDirectory="$(RepoRoot)" Command="npm ci &amp;&amp; npm run vendor" />
     <ItemGroup>
-      <None Include="$(RepoRoot)web\vendor\**\*" LinkBase="web\vendor" CopyToOutputDirectory="PreserveNewest" />
+      <!-- Items created inside a target don't get LinkBase applied, so set Link explicitly. -->
+      <_VendorFile Include="$(RepoRoot)web\vendor\**\*" />
+      <None Include="@(_VendorFile)" Link="web\vendor\%(_VendorFile.RecursiveDir)%(_VendorFile.Filename)%(_VendorFile.Extension)" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>
 
