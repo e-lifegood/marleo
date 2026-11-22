@@ -1,0 +1,19 @@
+# build output
+bin/
+obj/
+out/
+*.zip
+
+# generated front-end libraries (npm ci && npm run vendor)
+node_modules/
+web/vendor/
+
+# tests
+tests/out/
+
+# editors / OS
+.vs/
+.idea/
+*.user
+Thumbs.db
+.DS_Store

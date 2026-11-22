@@ -1,0 +1,33 @@
+name: Bug report
+description: Something does not render or behave as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: markdown
+    attributes:
+      label: Markdown that shows the problem
+      description: A minimal snippet, if the problem is about rendering.
+      render: markdown
+  - type: input
+    id: version
+    attributes:
+      label: mdv version
+      description: Press F1 in mdv - the version is at the bottom of the dialog.
+  - type: input
+    id: windows
+    attributes:
+      label: Windows version
+      placeholder: Windows 11 23H2
+  - type: textarea
+    id: log
+    attributes:
+      label: errors.log
+      description: Contents of %LOCALAPPDATA%\mdv\errors.log, if it exists.
+      render: text

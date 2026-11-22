@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; img-src 'self' https: data: blob:; media-src 'self' https://local.mdv; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; connect-src 'self'">
+  <title>mdv</title>
+  <link rel="stylesheet" href="app.css">
+  <script>
+    // Pick the theme before first paint (no flash).
+    try {
+      const p = JSON.parse(localStorage.getItem("mdv.theme") || '"auto"');
+      const dark = p === "dark" || (p === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
+      document.documentElement.dataset.theme = dark ? "dark" : "light";
+      const z = parseFloat(localStorage.getItem("mdv.zoom"));
+      if (z) document.documentElement.style.setProperty("--zoom", z);
+    } catch {}
+  </script>
+  <script src="vendor/markdown-it.min.js" defer></script>
+  <script src="vendor/purify.min.js" defer></script>
+  <script src="vendor/hljs/highlight.min.js" defer></script>
+  <script src="vendor/hljs/powershell.min.js" defer></script>
+  <script src="vendor/hljs/dockerfile.min.js" defer></script>
+  <script src="vendor/hljs/nginx.min.js" defer></script>
+  <script src="vendor/hljs/http.min.js" defer></script>
+  <script src="vendor/hljs/latex.min.js" defer></script>
+  <script src="vendor/hljs/protobuf.min.js" defer></script>
+  <script src="vendor/hljs/graphql.min.js" defer></script>
+  <script src="js/app.js" type="module"></script>
+</head>
+<body>
+  <header class="toolbar">
+    <div class="tb-group">
+      <button class="icon-btn" id="btn-sidebar" title="Files (Ctrl+B)"><i data-icon="sidebar"></i></button>
+      <button class="icon-btn" id="btn-back" title="Back (Alt+←)" disabled><i data-icon="back"></i></button>
+      <button class="icon-btn" id="btn-forward" title="Forward (Alt+→)" disabled><i data-icon="forward"></i></button>
+    </div>
+    <div class="crumbs" id="crumbs"></div>
+    <div class="tb-group tb-right">
+      <label class="mark-input" title="Highlight a word in its own color — or select text and press H">
+        <i data-icon="highlighter" data-size="15"></i>
+        <input id="mark-input" type="text" placeholder="Highlight…" spellcheck="false" autocomplete="off">
+      </label>
+      <button class="icon-btn" id="btn-sets" title="Highlight sets"><i data-icon="bookmark"></i></button>
+      <span class="tb-sep"></span>
+      <button class="icon-btn" id="btn-toc" title="Outline (Ctrl+T)"><i data-icon="toc"></i></button>
+      <button class="icon-btn" id="btn-theme" title="Theme: auto (Ctrl+D)"><i data-icon="auto"></i></button>
+      <button class="icon-btn" id="btn-more" title="More"><i data-icon="more"></i></button>
+      <button class="edit-btn" id="btn-edit" title="Edit in VS Code at this line (Ctrl+E)"><i data-icon="edit" data-size="15"></i><span>Edit</span></button>
+    </div>
+  </header>
+
+  <div class="markbar" id="markbar" hidden>
+    <div class="chips" id="chips"></div>
+    <button class="link-btn" id="btn-clear-marks" title="Remove all highlights (Ctrl+Shift+H)">Clear</button>
+  </div>
+
+  <div class="layout" id="layout">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-head">
+        <span class="sidebar-root" id="root-name"></span>
+        <button class="icon-btn small" id="btn-open-folder" title="Open folder (Ctrl+Shift+O)"><i data-icon="folderOpen" data-size="15"></i></button>
+      </div>
+      <div class="tree-filter">
+        <i data-icon="search" data-size="14"></i>
+        <input id="tree-filter" type="text" placeholder="Go to file… (Ctrl+P)" spellcheck="false" autocomplete="off">
+      </div>
+      <nav class="tree" id="tree"></nav>
+      <div class="resizer" id="resizer" title="Drag to resize"></div>
+    </aside>
+
+    <div class="content">
+      <main class="scroller" id="scroller" tabindex="-1">
+        <div class="banner" id="banner" hidden></div>
+        <article class="markdown-body" id="doc"></article>
+      </main>
+      <div class="lane" id="lane" aria-hidden="true"></div>
+      <div class="findbar" id="findbar" hidden>
+        <i data-icon="search" data-size="14"></i>
+        <input id="find-input" type="text" placeholder="Find in document" spellcheck="false" autocomplete="off">
+        <span class="find-count" id="find-count"></span>
+        <button class="icon-btn small" id="find-prev" title="Previous (Shift+Enter)"><i data-icon="up" data-size="15"></i></button>
+        <button class="icon-btn small" id="find-next" title="Next (Enter)"><i data-icon="down" data-size="15"></i></button>
+        <button class="icon-btn small" id="find-pin" title="Keep as a highlight"><i data-icon="highlighter" data-size="15"></i></button>
+        <button class="icon-btn small" id="find-close" title="Close (Esc)"><i data-icon="close" data-size="15"></i></button>
+      </div>
+    </div>
+
+    <aside class="toc" id="toc">
+      <div class="toc-title">On this page</div>
+      <nav class="toc-list" id="toc-list"></nav>
+    </aside>
+  </div>
+
+  <div class="popover" id="menu" hidden></div>
+  <div class="toast" id="toast"></div>
+
+  <div class="overlay" id="help" hidden>
+    <div class="dialog">
+      <div class="dialog-head">
+        <h2>Keyboard shortcuts</h2>
+        <button class="icon-btn" data-close title="Close (Esc)"><i data-icon="close"></i></button>
+      </div>
+      <div class="shortcuts">
+        <section>
+          <h3>Reading</h3>
+          <dl>
+            <dt><kbd>Ctrl</kbd><kbd>E</kbd></dt><dd>Edit in VS Code at this line</dd>
+            <dt><kbd>Ctrl</kbd><kbd>F</kbd></dt><dd>Find in document</dd>
+            <dt><kbd>Ctrl</kbd><kbd>P</kbd></dt><dd>Go to file</dd>
+            <dt><kbd>Ctrl</kbd><kbd>B</kbd></dt><dd>Toggle files</dd>
+            <dt><kbd>Ctrl</kbd><kbd>T</kbd></dt><dd>Toggle outline</dd>
+            <dt><kbd>Alt</kbd><kbd>←</kbd> <kbd>→</kbd></dt><dd>Back / forward</dd>
+            <dt><kbd>F5</kbd></dt><dd>Reload</dd>
+            <dt><kbd>Ctrl</kbd><kbd>+</kbd> <kbd>−</kbd> <kbd>0</kbd></dt><dd>Zoom</dd>
+            <dt><kbd>Ctrl</kbd><kbd>D</kbd></dt><dd>Theme: auto / light / dark</dd>
+          </dl>
+        </section>
+        <section>
+          <h3>Highlighting</h3>
+          <dl>
+            <dt><kbd>H</kbd></dt><dd>Highlight the selected text (double-click a word, then H)</dd>
+            <dt><kbd>Alt</kbd><kbd>1</kbd>…<kbd>9</kbd></dt><dd>Next occurrence of highlight 1–9</dd>
+            <dt><kbd>Alt</kbd><kbd>Shift</kbd><kbd>1</kbd>…<kbd>9</kbd></dt><dd>Previous occurrence</dd>
+            <dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>H</kbd></dt><dd>Clear all highlights</dd>
+          </dl>
+          <h3>Files</h3>
+          <dl>
+            <dt><kbd>Ctrl</kbd><kbd>O</kbd></dt><dd>Open file</dd>
+            <dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>O</kbd></dt><dd>Open folder</dd>
+            <dt><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>C</kbd></dt><dd>Copy file path</dd>
+            <dt><kbd>Ctrl</kbd>+click</dt><dd>Open link in a new window</dd>
+            <dt><kbd>Ctrl</kbd><kbd>,</kbd></dt><dd>Settings (editor command…)</dd>
+            <dt><kbd>Ctrl</kbd><kbd>W</kbd></dt><dd>Close window</dd>
+          </dl>
+        </section>
+      </div>
+      <div class="dialog-foot" id="help-foot"></div>
+    </div>
+  </div>
+</body>
+</html>

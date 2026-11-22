@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>mdv</AssemblyName>
+    <RootNamespace>Mdv</RootNamespace>
+    <ApplicationIcon>..\..\assets\mdv.ico</ApplicationIcon>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <Version>0.1.0</Version>
+    <Product>mdv</Product>
+    <Description>Fast, clean Markdown viewer for Windows</Description>
+    <Copyright>MIT License - mdv contributors</Copyright>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <!-- Precompiled code: noticeably faster cold start. -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <TieredPGO>true</TieredPGO>
+    <!-- No ICU load at startup; mdv has no culture-sensitive logic. -->
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <UseSystemResourceKeys>true</UseSystemResourceKeys>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- The WebView2 package also references its WPF control; harmless in a WinForms app. -->
+    <NoWarn>$(NoWarn);MSB3277</NoWarn>
+    <RepoRoot>$(MSBuildThisFileDirectory)..\..\</RepoRoot>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
+  </ItemGroup>
+
+  <!-- The web UI (HTML/CSS/JS + vendored libraries) is copied next to mdv.exe. -->
+  <ItemGroup>
+    <None Include="$(RepoRoot)web\**\*" LinkBase="web" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(RepoRoot)assets\mdv.ico" Link="mdv.ico" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Fetch the front-end libraries automatically the first time you build from a fresh clone. -->
+  <Target Name="VendorWebLibraries" BeforeTargets="BeforeBuild" Condition="!Exists('$(RepoRoot)web\vendor\markdown-it.min.js')">
+    <Message Importance="high" Text="web/vendor is missing: running npm ci + npm run vendor" />
+    <Exec WorkingDirectory="$(RepoRoot)" Command="npm ci &amp;&amp; npm run vendor" />
+    <ItemGroup>
+      <None Include="$(RepoRoot)web\vendor\**\*" LinkBase="web\vendor" CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+  </Target>
+
+</Project>
