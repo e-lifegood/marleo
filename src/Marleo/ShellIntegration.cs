@@ -1,26 +1,26 @@
 using System.Runtime.InteropServices;
 using Microsoft.Win32;
 
-namespace Mdv;
+namespace Marleo;
 
 /// <summary>
-/// Registers mdv with Windows Explorer for the current user only (HKCU — no admin rights needed).
+/// Registers Marleo with Windows Explorer for the current user only (HKCU — no admin rights needed).
 ///
 /// What gets added:
-///  • ProgID "mdv.md" + OpenWithProgids for .md/.markdown → mdv appears in "Open with".
-///  • Default Apps capabilities → mdv appears in Settings › Apps › Default apps.
-///  • "Open with mdv" on .md files, on folders and on folder backgrounds.
-///  • App Paths entry → typing `mdv` in Explorer's address bar or Win+R works.
-///  • The install folder on the user PATH → `mdv` works in any terminal.
+///  • ProgID "marleo.md" + OpenWithProgids for .md/.markdown → Marleo appears in "Open with".
+///  • Default Apps capabilities → Marleo appears in Settings › Apps › Default apps.
+///  • "Open with Marleo" on .md files, on folders and on folder backgrounds.
+///  • App Paths entry → typing `marleo` in Explorer's address bar or Win+R works.
+///  • The install folder on the user PATH → `marleo` works in any terminal.
 ///
-/// Windows 11 does not let an app make itself the default handler. The user picks mdv once
-/// (Open with → Choose another app → mdv → Always) and from then on double-click opens mdv.
+/// Windows 11 does not let an app make itself the default handler. The user picks Marleo once
+/// (Open with → Choose another app → Marleo → Always) and from then on double-click opens Marleo.
 /// </summary>
 internal static class ShellIntegration
 {
-    private const string ProgId = "mdv.md";
-    private const string VerbKey = "mdv";
-    private const string VerbLabel = "Open with mdv";
+    private const string ProgId = "marleo.md";
+    private const string VerbKey = "marleo";
+    private const string VerbLabel = "Open with Marleo";
     private static readonly string[] Extensions = [".md", ".markdown"];
 
     public static void Register(string exePath)
@@ -37,7 +37,7 @@ internal static class ShellIntegration
             k.SetValue("", "Markdown document");
             k.SetValue("FriendlyTypeName", "Markdown document");
             k.CreateSubKey("DefaultIcon").SetValue("", icon);
-            k.CreateSubKey(@"shell\open").SetValue("FriendlyAppName", "mdv");
+            k.CreateSubKey(@"shell\open").SetValue("FriendlyAppName", "Marleo");
             k.CreateSubKey(@"shell\open\command").SetValue("", cmdFile);
         }
 
@@ -46,17 +46,17 @@ internal static class ShellIntegration
             using var k = classes.CreateSubKey($@"{ext}\OpenWithProgids");
             k.SetValue(ProgId, Array.Empty<byte>(), RegistryValueKind.None);
 
-            // Explicit "Open with mdv" verb on the file, independent of the default app.
+            // Explicit "Open with Marleo" verb on the file, independent of the default app.
             using var verb = classes.CreateSubKey($@"SystemFileAssociations\{ext}\shell\{VerbKey}");
             verb.SetValue("", VerbLabel);
             verb.SetValue("Icon", icon);
             verb.CreateSubKey("command").SetValue("", cmdFile);
         }
 
-        // Applications\mdv.exe — how "Open with" lists the app.
-        using (var k = classes.CreateSubKey(@"Applications\mdv.exe"))
+        // Applications\marleo.exe — how "Open with" lists the app.
+        using (var k = classes.CreateSubKey(@"Applications\marleo.exe"))
         {
-            k.SetValue("FriendlyAppName", "mdv — Markdown viewer");
+            k.SetValue("FriendlyAppName", "Marleo — Markdown viewer");
             k.CreateSubKey(@"shell\open\command").SetValue("", cmdFile);
             using var types = k.CreateSubKey("SupportedTypes");
             foreach (var ext in Extensions) types.SetValue(ext, "");
@@ -72,19 +72,19 @@ internal static class ShellIntegration
         }
 
         // Default Apps (Settings) capabilities.
-        using (var cap = Registry.CurrentUser.CreateSubKey(@"Software\mdv\Capabilities"))
+        using (var cap = Registry.CurrentUser.CreateSubKey(@"Software\Marleo\Capabilities"))
         {
-            cap.SetValue("ApplicationName", "mdv");
+            cap.SetValue("ApplicationName", "Marleo");
             cap.SetValue("ApplicationDescription", "Fast, clean Markdown viewer");
             cap.SetValue("ApplicationIcon", icon);
             using var fa = cap.CreateSubKey("FileAssociations");
             foreach (var ext in Extensions) fa.SetValue(ext, ProgId);
         }
         using (var reg = Registry.CurrentUser.CreateSubKey(@"Software\RegisteredApplications"))
-            reg.SetValue("mdv", @"Software\mdv\Capabilities");
+            reg.SetValue("Marleo", @"Software\Marleo\Capabilities");
 
-        // App Paths: `mdv` from Win+R / Explorer address bar.
-        using (var k = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\App Paths\mdv.exe"))
+        // App Paths: `marleo` from Win+R / Explorer address bar.
+        using (var k = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\App Paths\marleo.exe"))
         {
             k.SetValue("", exePath);
             k.SetValue("Path", Path.GetDirectoryName(exePath)!);
@@ -100,7 +100,7 @@ internal static class ShellIntegration
         if (classes != null)
         {
             classes.DeleteSubKeyTree(ProgId, false);
-            classes.DeleteSubKeyTree(@"Applications\mdv.exe", false);
+            classes.DeleteSubKeyTree(@"Applications\marleo.exe", false);
             foreach (var ext in Extensions)
             {
                 using (var k = classes.OpenSubKey($@"{ext}\OpenWithProgids", writable: true))
@@ -111,10 +111,10 @@ internal static class ShellIntegration
                 classes.DeleteSubKeyTree($@"{target}\{VerbKey}", false);
         }
 
-        Registry.CurrentUser.DeleteSubKeyTree(@"Software\mdv", false);
+        Registry.CurrentUser.DeleteSubKeyTree(@"Software\Marleo", false);
         using (var reg = Registry.CurrentUser.OpenSubKey(@"Software\RegisteredApplications", writable: true))
-            reg?.DeleteValue("mdv", false);
-        Registry.CurrentUser.DeleteSubKeyTree(@"Software\Microsoft\Windows\CurrentVersion\App Paths\mdv.exe", false);
+            reg?.DeleteValue("Marleo", false);
+        Registry.CurrentUser.DeleteSubKeyTree(@"Software\Microsoft\Windows\CurrentVersion\App Paths\marleo.exe", false);
 
         if (Environment.ProcessPath is { } exe) RemoveFromUserPath(Path.GetDirectoryName(exe)!);
         NotifyShell();

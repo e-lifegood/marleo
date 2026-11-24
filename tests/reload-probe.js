@@ -1,4 +1,4 @@
-// Logs every re-render of the document to %LOCALAPPDATA%\mdv\mdv.log (see tests/run-tests.ps1).
+// Logs every re-render of the document to %LOCALAPPDATA%\marleo\marleo.log (see tests/run-tests.ps1).
 (() => {
   const log = (message) => window.chrome.webview.postMessage({ type: "log", message });
   const doc = document.getElementById("doc");

@@ -1,6 +1,6 @@
 # Feature tour
 
-This page exercises everything mdv renders. Use the outline on the right (<kbd>Ctrl</kbd>+<kbd>T</kbd>) to jump around.
+This page exercises everything Marleo renders. Use the outline on the right (<kbd>Ctrl</kbd>+<kbd>T</kbd>) to jump around.
 
 ## Text
 
@@ -29,7 +29,7 @@ Accented words work with highlighting too: canción, configuración, informació
 - Agents read context from Markdown
   - nested item
   - another nested item
-- Humans read the same file in mdv
+- Humans read the same file in Marleo
 
 1. First
 2. Second
@@ -50,8 +50,8 @@ private void OpenInEditor(int line)
 ```
 
 ```powershell
-# Register mdv in Explorer for the current user
-mdv --register
+# Register Marleo in Explorer for the current user
+marleo --register
 Get-ChildItem -Recurse -Filter *.md | Measure-Object
 ```
 
@@ -72,11 +72,11 @@ Get-ChildItem -Recurse -Filter *.md | Measure-Object
 
 ```mermaid
 flowchart LR
-    A[Explorer: double-click .md] --> B(mdv window)
+    A[Explorer: double-click .md] --> B(Marleo window)
     F[Explorer: right-click folder] --> B
     B --> C{Read}
     C -->|Ctrl+E| D[VS Code at the same line]
-    D -->|save| E[mdv reloads automatically]
+    D -->|save| E[Marleo reloads automatically]
     E --> C
 ```
 
@@ -84,15 +84,15 @@ flowchart LR
 sequenceDiagram
     participant You
     participant Agent
-    participant mdv
+    participant Marleo
     You->>Agent: Work from context.md
-    Agent->>mdv: writes context.md
-    mdv-->>You: live reload
+    Agent->>Marleo: writes context.md
+    Marleo-->>You: live reload
 ```
 
 ## Images
 
-![The mdv icon](images/logo.png)
+![The Marleo icon](images/logo.png)
 
 ## Details
 

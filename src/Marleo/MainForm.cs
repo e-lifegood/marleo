@@ -7,7 +7,7 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using Microsoft.Win32;
 
-namespace Mdv;
+namespace Marleo;
 
 /// <summary>
 /// The viewer window: a WebView2 that hosts the web UI (web/index.html) plus the native glue —
@@ -17,8 +17,8 @@ namespace Mdv;
 /// </summary>
 internal sealed class MainForm : Form
 {
-    private const string AppHost = "app.mdv";     // web/ folder (the UI itself)
-    private const string FileHost = "local.mdv";  // images & media referenced by documents
+    private const string AppHost = "app.marleo";     // web/ folder (the UI itself)
+    private const string FileHost = "local.marleo";  // images & media referenced by documents
 
 
     private readonly LaunchOptions _options;
@@ -42,7 +42,7 @@ internal sealed class MainForm : Form
     {
         _options = options;
         Mark("ctor");
-        Text = "mdv";
+        Text = "Marleo";
         Icon = LoadAppIcon();
         Mark("icon");
         _dark = options.Theme switch { "dark" => true, "light" => false, _ => SystemUsesDarkTheme() };
@@ -95,18 +95,18 @@ internal sealed class MainForm : Form
         }
         catch (WebView2RuntimeNotFoundException)
         {
-            MessageBox.Show("mdv needs the Microsoft Edge WebView2 Runtime.\nIt ships with Windows 11; on older systems install it from:\nhttps://developer.microsoft.com/microsoft-edge/webview2/",
-                "mdv", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show("Marleo needs the Microsoft Edge WebView2 Runtime.\nIt ships with Windows 11; on older systems install it from:\nhttps://developer.microsoft.com/microsoft-edge/webview2/",
+                "Marleo", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
         }
     }
 
     private async Task InitWebViewAsync()
     {
-        // One shared profile folder: a second mdv window reuses the running browser process → opens faster.
+        // One shared profile folder: a second Marleo window reuses the running browser process → opens faster.
         Mark("load");
         // A viewer needs none of the browser's background services: skipping them shortens cold start.
-        // (Every mdv window must pass identical options, otherwise WebView2 refuses to share the profile.)
+        // (Every Marleo window must pass identical options, otherwise WebView2 refuses to share the profile.)
         var options = new CoreWebView2EnvironmentOptions
         {
             AdditionalBrowserArguments = "--disable-background-networking --disable-component-update --disable-sync " +
@@ -176,7 +176,7 @@ internal sealed class MainForm : Form
                 AppendLog("errors.log", (string?)m["message"]);
                 break;
             case "log": // dev/test channel used by tests/*.js
-                AppendLog("mdv.log", (string?)m["message"]);
+                AppendLog("marleo.log", (string?)m["message"]);
                 break;
             case "open":
                 OpenPath((string?)m["path"], (string?)m["hash"], (bool?)m["newWindow"] ?? false);
@@ -226,8 +226,10 @@ internal sealed class MainForm : Form
         }
     }
 
-    // MDV_TRACE=1 logs startup phases (ms since Main) to %LOCALAPPDATA%\mdv\startup.log
-    private static readonly bool Trace = Environment.GetEnvironmentVariable("MDV_TRACE") == "1";
+    // MARLEO_TRACE=1 logs startup phases (ms since Main) to %LOCALAPPDATA%\marleo\startup.log
+    // (MDV_TRACE, the pre-0.2.0 name, is still accepted).
+    private static readonly bool Trace =
+        Environment.GetEnvironmentVariable("MARLEO_TRACE") == "1" || Environment.GetEnvironmentVariable("MDV_TRACE") == "1";
     private readonly List<string> _marks = [];
     private void Mark(string phase) { if (Trace) _marks.Add($"{phase}={Program.Clock.ElapsedMilliseconds}"); }
 
@@ -309,7 +311,7 @@ internal sealed class MainForm : Form
         {
             ["type"] = "tree",
             ["root"] = root,
-            ["tree"] = JsonSerializer.SerializeToNode(tree, MdvJson.Default.TreeNode),
+            ["tree"] = JsonSerializer.SerializeToNode(tree, MarleoJson.Default.TreeNode),
             ["truncated"] = truncated,
         });
         WatchTree(truncated);
@@ -563,7 +565,7 @@ internal sealed class MainForm : Form
     };
 
     /// <summary>
-    /// Serves https://local.mdv/C:/path/to/image.png from disk. Only media types are served,
+    /// Serves https://local.marleo/C:/path/to/image.png from disk. Only media types are served,
     /// so a document can show its images but cannot read arbitrary files.
     /// </summary>
     private void OnWebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
@@ -624,7 +626,7 @@ internal sealed class MainForm : Form
     private void UpdateTitle()
     {
         var name = _current != null ? Path.GetFileName(_current) : Path.GetFileName(_root.TrimEnd('\\'));
-        Text = string.IsNullOrEmpty(name) ? "mdv" : $"{name} — mdv";
+        Text = string.IsNullOrEmpty(name) ? "Marleo" : $"{name} — Marleo";
     }
 
     private void ApplyBackground()
@@ -662,7 +664,7 @@ internal sealed class MainForm : Form
     {
         try
         {
-            var ico = Path.Combine(AppContext.BaseDirectory, "mdv.ico");
+            var ico = Path.Combine(AppContext.BaseDirectory, "marleo.ico");
             return File.Exists(ico) ? new Icon(ico) : Icon.ExtractAssociatedIcon(Environment.ProcessPath!);
         }
         catch { return null; }
@@ -685,8 +687,8 @@ internal sealed class MainForm : Form
             return;
         }
 
-        // Cascade when another mdv window is already open (a named mutex is much cheaper than listing processes).
-        _instance = new Mutex(false, @"Local\mdv-window", out bool first);
+        // Cascade when another Marleo window is already open (a named mutex is much cheaper than listing processes).
+        _instance = new Mutex(false, @"Local\marleo-window", out bool first);
         int offset = first ? 0 : 28 * Random.Shared.Next(1, 6);
         var bounds = new Rectangle(st.X + offset, st.Y + offset, st.Width, st.Height);
         if (Screen.AllScreens.Any(s => s.WorkingArea.IntersectsWith(bounds)))

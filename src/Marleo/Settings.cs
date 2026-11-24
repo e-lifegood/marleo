@@ -1,11 +1,11 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Mdv;
+namespace Marleo;
 
 /// <summary>
-/// User-editable settings, stored in %APPDATA%\mdv\settings.json.
-/// The file is created with defaults the first time mdv runs so it is easy to discover.
+/// User-editable settings, stored in %APPDATA%\marleo\settings.json.
+/// The file is created with defaults the first time Marleo runs so it is easy to discover.
 /// </summary>
 internal sealed class Settings
 {
@@ -33,11 +33,11 @@ internal sealed class Settings
         try
         {
             if (File.Exists(FilePath))
-                return JsonSerializer.Deserialize(File.ReadAllText(FilePath), MdvJson.Default.Settings) ?? new Settings();
+                return JsonSerializer.Deserialize(File.ReadAllText(FilePath), MarleoJson.Default.Settings) ?? new Settings();
 
             var s = new Settings();
             Directory.CreateDirectory(AppInfo.RoamingDataDir);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(s, MdvJson.Default.Settings));
+            File.WriteAllText(FilePath, JsonSerializer.Serialize(s, MarleoJson.Default.Settings));
             return s;
         }
         catch
@@ -50,7 +50,7 @@ internal sealed class Settings
         MarkdownExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
 }
 
-/// <summary>Window position/size, remembered between runs (%LOCALAPPDATA%\mdv\window.json).</summary>
+/// <summary>Window position/size, remembered between runs (%LOCALAPPDATA%\marleo\window.json).</summary>
 internal sealed class WindowPlacement
 {
     public int X { get; set; }
@@ -63,7 +63,7 @@ internal sealed class WindowPlacement
 
     public static WindowPlacement? Load()
     {
-        try { return File.Exists(FilePath) ? JsonSerializer.Deserialize(File.ReadAllText(FilePath), MdvJson.Default.WindowPlacement) : null; }
+        try { return File.Exists(FilePath) ? JsonSerializer.Deserialize(File.ReadAllText(FilePath), MarleoJson.Default.WindowPlacement) : null; }
         catch { return null; }
     }
 
@@ -72,7 +72,7 @@ internal sealed class WindowPlacement
         try
         {
             Directory.CreateDirectory(AppInfo.LocalDataDir);
-            File.WriteAllText(FilePath, JsonSerializer.Serialize(this, MdvJson.Default.WindowPlacement));
+            File.WriteAllText(FilePath, JsonSerializer.Serialize(this, MarleoJson.Default.WindowPlacement));
         }
         catch { /* not critical */ }
     }
@@ -89,4 +89,4 @@ internal sealed class WindowPlacement
 [JsonSerializable(typeof(Settings))]
 [JsonSerializable(typeof(WindowPlacement))]
 [JsonSerializable(typeof(TreeNode))]
-internal sealed partial class MdvJson : JsonSerializerContext;
+internal sealed partial class MarleoJson : JsonSerializerContext;

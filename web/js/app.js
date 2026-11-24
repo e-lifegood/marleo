@@ -1,4 +1,4 @@
-// mdv web UI — wires the page to the native host (MainForm.cs) and to the feature modules.
+// Marleo web UI — wires the page to the native host (MainForm.cs) and to the feature modules.
 import { hydrateIcons, icon } from "./icons.js";
 import { renderMarkdown, fixMedia, renderMermaid } from "./render.js";
 import { Marks, Sets } from "./marks.js";
@@ -15,10 +15,10 @@ window.addEventListener("unhandledrejection", (e) => post({ type: "jserror", mes
 
 const store = {
   get(key, fallback) {
-    try { const v = localStorage.getItem("mdv." + key); return v == null ? fallback : JSON.parse(v); } catch { return fallback; }
+    try { const v = localStorage.getItem("marleo." + key); return v == null ? fallback : JSON.parse(v); } catch { return fallback; }
   },
   set(key, value) {
-    try { localStorage.setItem("mdv." + key, JSON.stringify(value)); } catch { /* storage unavailable */ }
+    try { localStorage.setItem("marleo." + key, JSON.stringify(value)); } catch { /* storage unavailable */ }
   },
 };
 
@@ -479,7 +479,7 @@ function command(cmd) {
 
 function showHelp() {
   $("help-foot").textContent =
-    `mdv ${state.version}` + (state.startupMs ? ` · opened in ${state.startupMs} ms` : "") + (state.settingsPath ? ` · ${state.settingsPath}` : "");
+    `Marleo ${state.version}` + (state.startupMs ? ` · opened in ${state.startupMs} ms` : "") + (state.settingsPath ? ` · ${state.settingsPath}` : "");
   els.help.hidden = false;
 }
 els.help.addEventListener("click", (e) => { if (e.target === els.help || e.target.closest("[data-close]")) els.help.hidden = true; });
@@ -578,4 +578,4 @@ function esc(s) { return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 setToc(state.toc);
 applyTheme();
 if (host) post({ type: "ready" });
-else els.article.innerHTML = `<div class="empty"><h2>mdv</h2><p>This page is the UI of mdv.exe — run the app to view documents.</p></div>`;
+else els.article.innerHTML = `<div class="empty"><h2>Marleo</h2><p>This page is the UI of marleo.exe — run the app to view documents.</p></div>`;

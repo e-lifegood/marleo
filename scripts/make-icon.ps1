@@ -1,4 +1,4 @@
-# Generates assets/mdv.ico (16-256 px) and assets/mdv-256.png with System.Drawing.
+# Generates assets/marleo.ico (16-256 px) and assets/marleo-256.png with System.Drawing.
 # Run from the repo root:  powershell -ExecutionPolicy Bypass -File scripts/make-icon.ps1
 Add-Type -AssemblyName System.Drawing
 $ErrorActionPreference = 'Stop'
@@ -56,7 +56,7 @@ $pngs = foreach ($sz in $sizes) {
     $bmp = New-IconBitmap $sz
     $ms = New-Object System.IO.MemoryStream
     $bmp.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png)
-    if ($sz -eq 256) { $bmp.Save((Join-Path $assets 'mdv-256.png'), [System.Drawing.Imaging.ImageFormat]::Png) }
+    if ($sz -eq 256) { $bmp.Save((Join-Path $assets 'marleo-256.png'), [System.Drawing.Imaging.ImageFormat]::Png) }
     $bmp.Dispose()
     , $ms.ToArray()
 }
@@ -74,5 +74,5 @@ for ($i = 0; $i -lt $sizes.Count; $i++) {
 }
 foreach ($p in $pngs) { $w.Write($p) }
 $w.Flush()
-[System.IO.File]::WriteAllBytes((Join-Path $assets 'mdv.ico'), $out.ToArray())
-Write-Host "assets/mdv.ico ($($out.Length) bytes)"
+[System.IO.File]::WriteAllBytes((Join-Path $assets 'marleo.ico'), $out.ToArray())
+Write-Host "assets/marleo.ico ($($out.Length) bytes)"

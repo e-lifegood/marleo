@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  End-to-end tests for mdv: drives the real app (WebView2) and checks the results.
+  End-to-end tests for Marleo: drives the real app (WebView2) and checks the results.
 
 .DESCRIPTION
   1. UI smoke test   - highlights, Alt+n navigation, find, outline, code, alerts, tasks, images, Mermaid, theme.
@@ -15,12 +15,12 @@ $ErrorActionPreference = "Stop"
 $root = Split-Path $PSScriptRoot -Parent
 Set-Location $root
 
-dotnet build src\Mdv\Mdv.csproj -c $Configuration -v q -nologo | Out-Null
+dotnet build src\Marleo\Marleo.csproj -c $Configuration -v q -nologo | Out-Null
 if ($LASTEXITCODE) { throw "build failed" }
-$exe = (Resolve-Path "src\Mdv\bin\$Configuration\net10.0-windows\win-x64\mdv.exe").Path
+$exe = (Resolve-Path "src\Marleo\bin\$Configuration\net10.0-windows\win-x64\marleo.exe").Path
 $out = Join-Path $PSScriptRoot "out"
 New-Item -ItemType Directory -Force $out | Out-Null
-$log = Join-Path $env:LOCALAPPDATA "mdv\mdv.log"
+$log = Join-Path $env:LOCALAPPDATA "marleo\marleo.log"
 $failed = 0
 
 function Read-Log { if (Test-Path $log) { Get-Content $log -Encoding UTF8 } else { @() } }
@@ -66,7 +66,7 @@ foreach ($case in @(@("direct write", "h1=Version 2"), @("temp file + rename", "
     else { Write-Host "FAIL  live reload: $($case[0])" -ForegroundColor Red; $failed++ }
 }
 
-$errors = Join-Path $env:LOCALAPPDATA "mdv\errors.log"
+$errors = Join-Path $env:LOCALAPPDATA "marleo\errors.log"
 if (Test-Path $errors) { Write-Host "`nJavaScript errors logged in $errors" -ForegroundColor Yellow }
 
 Write-Host ""

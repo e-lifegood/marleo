@@ -1,4 +1,4 @@
-/* mdv — clean reading UI. Colors are tokens; light and dark themes redefine them. */
+/* Marleo — clean reading UI. Colors are tokens; light and dark themes redefine them. */
 
 :root {
   --font-ui: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;

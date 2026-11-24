@@ -6,20 +6,20 @@
     <UseWindowsForms>true</UseWindowsForms>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <AssemblyName>mdv</AssemblyName>
-    <RootNamespace>Mdv</RootNamespace>
-    <ApplicationIcon>..\..\assets\mdv.ico</ApplicationIcon>
+    <AssemblyName>marleo</AssemblyName>
+    <RootNamespace>Marleo</RootNamespace>
+    <ApplicationIcon>..\..\assets\marleo.ico</ApplicationIcon>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>0.1.0</Version>
-    <Product>mdv</Product>
+    <Version>0.2.0</Version>
+    <Product>Marleo</Product>
     <Description>Fast, clean Markdown viewer for Windows</Description>
-    <Copyright>MIT License - mdv contributors</Copyright>
+    <Copyright>MIT License - Marleo contributors</Copyright>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <SelfContained>false</SelfContained>
     <!-- Precompiled code: noticeably faster cold start. -->
     <PublishReadyToRun>true</PublishReadyToRun>
     <TieredPGO>true</TieredPGO>
-    <!-- No ICU load at startup; mdv has no culture-sensitive logic. -->
+    <!-- No ICU load at startup; Marleo has no culture-sensitive logic. -->
     <InvariantGlobalization>true</InvariantGlobalization>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
@@ -33,10 +33,10 @@
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4314.35" />
   </ItemGroup>
 
-  <!-- The web UI (HTML/CSS/JS + vendored libraries) is copied next to mdv.exe. -->
+  <!-- The web UI (HTML/CSS/JS + vendored libraries) is copied next to marleo.exe. -->
   <ItemGroup>
     <None Include="$(RepoRoot)web\**\*" LinkBase="web" CopyToOutputDirectory="PreserveNewest" />
-    <None Include="$(RepoRoot)assets\mdv.ico" Link="mdv.ico" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(RepoRoot)assets\marleo.ico" Link="marleo.ico" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Fetch the front-end libraries automatically the first time you build from a fresh clone. -->

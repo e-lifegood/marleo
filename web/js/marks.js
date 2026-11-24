@@ -3,7 +3,7 @@
 import { icon } from "./icons.js";
 
 export const COLORS = 10;
-const SETS_KEY = "mdv.sets";
+const SETS_KEY = "marleo.sets";
 const SKIP = "mark.hl, svg, .mermaid, script, style, .code-head, .frontmatter > summary";
 
 const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

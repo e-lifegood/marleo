@@ -4,16 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta http-equiv="Content-Security-Policy"
-        content="default-src 'self'; img-src 'self' https: data: blob:; media-src 'self' https://local.mdv; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; connect-src 'self'">
-  <title>mdv</title>
+        content="default-src 'self'; img-src 'self' https: data: blob:; media-src 'self' https://local.marleo; style-src 'self' 'unsafe-inline'; script-src 'self'; font-src 'self' data:; connect-src 'self'">
+  <title>Marleo</title>
   <link rel="stylesheet" href="app.css">
   <script>
     // Pick the theme before first paint (no flash).
     try {
-      const p = JSON.parse(localStorage.getItem("mdv.theme") || '"auto"');
+      const p = JSON.parse(localStorage.getItem("marleo.theme") || '"auto"');
       const dark = p === "dark" || (p === "auto" && matchMedia("(prefers-color-scheme: dark)").matches);
       document.documentElement.dataset.theme = dark ? "dark" : "light";
-      const z = parseFloat(localStorage.getItem("mdv.zoom"));
+      const z = parseFloat(localStorage.getItem("marleo.zoom"));
       if (z) document.documentElement.style.setProperty("--zoom", z);
     } catch {}
   </script>
