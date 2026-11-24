@@ -6,9 +6,9 @@ tags: [onboarding, agents, docs]
 
 # Project handbook
 
-<img src="images/logo.png" alt="mdv logo" width="72" align="right">
+<img src="images/logo.png" alt="Marleo logo" width="72" align="right">
 
-Welcome! This folder is a **sample knowledge base** used to try mdv. Every page is plain Markdown, so the
+Welcome! This folder is a **sample knowledge base** used to try Marleo. Every page is plain Markdown, so the
 same files work for people *and* for AI agents.
 
 > [!TIP]

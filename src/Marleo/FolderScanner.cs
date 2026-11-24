@@ -1,4 +1,4 @@
-namespace Mdv;
+namespace Marleo;
 
 /// <summary>A node of the sidebar tree. Serialized to JSON for the web UI.</summary>
 internal sealed record TreeNode(string Name, string Path, bool Dir, List<TreeNode>? Children);

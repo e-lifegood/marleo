@@ -1,19 +1,19 @@
 using System.Diagnostics;
 
-namespace Mdv;
+namespace Marleo;
 
 /// <summary>
 /// Entry point.
 ///
-///   mdv                         open the current directory
-///   mdv &lt;file.md | folder&gt;     open a document or a folder of documents
-///   mdv --highlight "a,b,c"     start with these terms highlighted
-///   mdv --theme light|dark      force a theme for this window
-///   mdv --register              add mdv to Explorer (HKCU, no admin needed)
-///   mdv --unregister            remove everything --register added
-///   mdv --screenshot out.png    render, save a PNG of the page and exit (used for docs)
-///   mdv --run-script test.js    dev hook: run JavaScript in the page after the first render
-///   mdv --window 1600x1000      initial window size in pixels (handy for screenshots)
+///   marleo                      open the current directory
+///   marleo &lt;file.md | folder&gt;  open a document or a folder of documents
+///   marleo --highlight "a,b,c"  start with these terms highlighted
+///   marleo --theme light|dark   force a theme for this window
+///   marleo --register           add Marleo to Explorer (HKCU, no admin needed)
+///   marleo --unregister         remove everything --register added
+///   marleo --screenshot out.png render, save a PNG of the page and exit (used for docs)
+///   marleo --run-script test.js dev hook: run JavaScript in the page after the first render
+///   marleo --window 1600x1000   initial window size in pixels (handy for screenshots)
 /// </summary>
 internal static class Program
 {
@@ -29,27 +29,32 @@ internal static class Program
         {
             try
             {
-                if (options.Command == "register") ShellIntegration.Register(Environment.ProcessPath!);
+                if (options.Command == "register")
+                {
+                    ShellIntegration.Register(Environment.ProcessPath!);
+                    LegacyMigration.RunOnce(); // upgrading from v0.1.0 (mdv): settings, window state, localStorage
+                }
                 else ShellIntegration.Unregister();
                 if (!options.Quiet)
                     MessageBox.Show(options.Command == "register"
-                        ? "mdv was added to Explorer.\n\n• Right-click a folder → Show more options → Open with mdv\n• Right-click a .md file → Open with → mdv (tick \"Always\" to make it the default)\n• Type mdv in Explorer's address bar to open the current folder"
-                        : "mdv was removed from Explorer.", "mdv", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        ? "Marleo was added to Explorer.\n\n• Right-click a folder → Show more options → Open with Marleo\n• Right-click a .md file → Open with → Marleo (tick \"Always\" to make it the default)\n• Type marleo (or mdv) in Explorer's address bar or a terminal to open the current folder"
+                        : "Marleo was removed from Explorer.", "Marleo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return 0;
             }
             catch (Exception ex)
             {
-                if (!options.Quiet) MessageBox.Show(ex.Message, "mdv", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                if (!options.Quiet) MessageBox.Show(ex.Message, "Marleo", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return 1;
             }
         }
 
         if (options.Command == "version")
         {
-            MessageBox.Show($"mdv {AppInfo.Version}", "mdv");
+            MessageBox.Show($"Marleo {AppInfo.Version}", "Marleo");
             return 0;
         }
 
+        LegacyMigration.RunOnce();
         ApplicationConfiguration.Initialize();
         Application.Run(new MainForm(options));
         return 0;
@@ -108,11 +113,14 @@ internal static class AppInfo
     public static string Version =>
         typeof(AppInfo).Assembly.GetName().Version?.ToString(3) ?? "0.0.0";
 
-    /// <summary>%LOCALAPPDATA%\mdv — WebView2 profile, window state.</summary>
+    /// <summary>%LOCALAPPDATA%\marleo — WebView2 profile, window state.</summary>
     public static string LocalDataDir { get; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "mdv");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "marleo");
 
-    /// <summary>%APPDATA%\mdv — user settings (settings.json).</summary>
+    /// <summary>%APPDATA%\marleo — user settings (settings.json).</summary>
     public static string RoamingDataDir { get; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "mdv");
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "marleo");
+
+    /// <summary>%LOCALAPPDATA%\marleo\WebView2 — the browser profile shared by all Marleo windows.</summary>
+    public static string WebViewProfileDir => Path.Combine(LocalDataDir, "WebView2");
 }

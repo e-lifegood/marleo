@@ -1,5 +1,5 @@
-// UI smoke test for mdv. Run against the samples and look at the PNG:
-//   mdv samples\demo.md --run-script tests\ui-smoke.js --screenshot smoke.png
+// UI smoke test for Marleo. Run against the samples and look at the PNG:
+//   marleo samples\demo.md --run-script tests\ui-smoke.js --screenshot smoke.png
 // It drives the UI through real keyboard events and prints a pass/fail panel on top of the page.
 (async () => {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -39,7 +39,7 @@
   // 5. Ctrl+F find
   key("f", { ctrlKey: true });
   const find = document.getElementById("find-input");
-  find.value = "mdv";
+  find.value = "marleo";
   find.dispatchEvent(new Event("input", { bubbles: true }));
   await sleep(250);
   check("Ctrl+F find", article.querySelectorAll("mark.hl-find").length > 0, document.getElementById("find-count").textContent);

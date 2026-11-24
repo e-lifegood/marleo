@@ -31,7 +31,7 @@ jobs:
           npm run vendor
 
       - name: Build
-        run: dotnet build src/Mdv/Mdv.csproj -c Release -nologo
+        run: dotnet build src/Marleo/Marleo.csproj -c Release -nologo
 
       - name: End-to-end tests
         shell: pwsh
@@ -41,18 +41,18 @@ jobs:
       - name: Publish
         shell: pwsh
         run: |
-          dotnet publish src/Mdv/Mdv.csproj -c Release -o out/mdv -nologo
-          dotnet publish src/Mdv/Mdv.csproj -c Release -o out/mdv-standalone --self-contained true -nologo
-          Compress-Archive -Path out/mdv/* -DestinationPath mdv-win-x64.zip
-          Compress-Archive -Path out/mdv-standalone/* -DestinationPath mdv-win-x64-standalone.zip
-          Copy-Item scripts/get-mdv.ps1 install.ps1
+          dotnet publish src/Marleo/Marleo.csproj -c Release -o out/marleo -nologo
+          dotnet publish src/Marleo/Marleo.csproj -c Release -o out/marleo-standalone --self-contained true -nologo
+          Compress-Archive -Path out/marleo/* -DestinationPath marleo-win-x64.zip
+          Compress-Archive -Path out/marleo-standalone/* -DestinationPath marleo-win-x64-standalone.zip
+          Copy-Item scripts/get-marleo.ps1 install.ps1
 
       - uses: actions/upload-artifact@v4
         with:
-          name: mdv-win-x64
+          name: marleo-win-x64
           path: |
-            mdv-win-x64.zip
-            mdv-win-x64-standalone.zip
+            marleo-win-x64.zip
+            marleo-win-x64-standalone.zip
             install.ps1
 
       - name: Release
@@ -60,7 +60,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            mdv-win-x64.zip
-            mdv-win-x64-standalone.zip
+            marleo-win-x64.zip
+            marleo-win-x64-standalone.zip
             install.ps1
           generate_release_notes: true

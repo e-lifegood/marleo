@@ -18,8 +18,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: mdv version
-      description: Press F1 in mdv - the version is at the bottom of the dialog.
+      label: Marleo version
+      description: Press F1 in Marleo - the version is at the bottom of the dialog.
   - type: input
     id: windows
     attributes:
@@ -29,5 +29,5 @@ body:
     id: log
     attributes:
       label: errors.log
-      description: Contents of %LOCALAPPDATA%\mdv\errors.log, if it exists.
+      description: Contents of %LOCALAPPDATA%\marleo\errors.log, if it exists.
       render: text

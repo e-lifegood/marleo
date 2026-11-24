@@ -13,7 +13,7 @@ That is why we keep our context, specs and reviews as `.md` files instead of PDF
 ## Review loop
 
 1. The agent updates `context.md` while it works.
-2. mdv shows the change instantly (watch the green dot next to the file name).
+2. Marleo shows the change instantly (watch the green dot next to the file name).
 3. You read, highlight the terms that matter (for example *agent*, *review*, *decision*) and press
    <kbd>Ctrl</kbd>+<kbd>E</kbd> to correct something in VS Code.
 

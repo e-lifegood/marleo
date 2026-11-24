@@ -1,7 +1,7 @@
 {
-  "name": "mdv-web",
+  "name": "marleo-web",
   "private": true,
-  "description": "Front-end dependencies for mdv. Run `npm ci && npm run vendor` to copy them into web/vendor.",
+  "description": "Front-end dependencies for Marleo. Run `npm ci && npm run vendor` to copy them into web/vendor.",
   "license": "MIT",
   "scripts": {
     "vendor": "node scripts/vendor.mjs"

@@ -12,7 +12,7 @@ const md = window.markdownit({ html: true, linkify: true, typographer: false });
 const esc = md.utils.escapeHtml;
 
 // --- data-line on block tokens -------------------------------------------------------------
-md.core.ruler.push("mdv_lines", (state) => {
+md.core.ruler.push("marleo_lines", (state) => {
   const offset = state.env.lineOffset || 0;
   for (const t of state.tokens) {
     if (t.map && t.nesting >= 0 && t.type !== "inline") t.attrSet("data-line", String(t.map[0] + 1 + offset));
@@ -24,7 +24,7 @@ export function slugify(text) {
   return text.trim().toLowerCase().replace(/[^\p{L}\p{N}\s_-]/gu, "").replace(/\s/g, "-");
 }
 
-md.core.ruler.push("mdv_headings", (state) => {
+md.core.ruler.push("marleo_headings", (state) => {
   const used = new Map();
   const tokens = state.tokens;
   for (let i = 0; i < tokens.length; i++) {
@@ -45,7 +45,7 @@ md.core.ruler.push("mdv_headings", (state) => {
 });
 
 // --- task lists ----------------------------------------------------------------------------
-md.core.ruler.push("mdv_tasks", (state) => {
+md.core.ruler.push("marleo_tasks", (state) => {
   const tokens = state.tokens;
   for (let i = 2; i < tokens.length; i++) {
     const t = tokens[i];
@@ -69,7 +69,7 @@ const ALERTS = {
   warning: ["Warning", "alert"],
   caution: ["Caution", "octagon"],
 };
-md.core.ruler.push("mdv_alerts", (state) => {
+md.core.ruler.push("marleo_alerts", (state) => {
   const tokens = state.tokens;
   for (let i = 0; i < tokens.length - 2; i++) {
     if (tokens[i].type !== "blockquote_open" || tokens[i + 1].type !== "paragraph_open") continue;
@@ -138,18 +138,18 @@ export function renderMarkdown(source) {
 
 /**
  * Makes images/media inside the document load from disk:
- * relative paths are resolved against the document folder and served by the host as https://local.mdv/…
+ * relative paths are resolved against the document folder and served by the host as https://local.marleo/…
  */
 export function fixMedia(article, docDir) {
   if (!docDir) return;
   const dir = docDir.replace(/\\/g, "/").replace(/\/?$/, "/");
-  const base = "https://local.mdv/" + (dir.startsWith("//") ? "UNC/" + dir.slice(2) : dir);
+  const base = "https://local.marleo/" + (dir.startsWith("//") ? "UNC/" + dir.slice(2) : dir);
   for (const el of article.querySelectorAll("img[src], video[src], audio[src], source[src]")) {
     const src = el.getAttribute("src");
     if (!src || /^(https?:|data:|blob:)/i.test(src)) continue;
     let url;
-    if (/^file:/i.test(src)) url = "https://local.mdv/" + decodeURI(src.replace(/^file:\/+/i, ""));
-    else if (/^[a-z]:[\\/]/i.test(src)) url = "https://local.mdv/" + src.replace(/\\/g, "/");
+    if (/^file:/i.test(src)) url = "https://local.marleo/" + decodeURI(src.replace(/^file:\/+/i, ""));
+    else if (/^[a-z]:[\\/]/i.test(src)) url = "https://local.marleo/" + src.replace(/\\/g, "/");
     else url = new URL(src.replace(/\\/g, "/"), encodeURI(base)).href;
     el.setAttribute("src", url);
     if (el.tagName === "IMG") el.loading = "lazy";

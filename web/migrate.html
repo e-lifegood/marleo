@@ -1,0 +1,24 @@
+<!doctype html>
+<!--
+  One-time upgrade from v0.1.0, when the app was called mdv. The host serves this page as
+  https://app.mdv/migrate.html (the old origin) only while importing; it reads every "mdv.*" localStorage key
+  and hands them to the host, which replays them as "marleo.*" (MainForm.ImportLegacyStorageAsync).
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'">
+  <title>Marleo</title>
+  <script>
+    const items = {};
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith("mdv.")) items[key.slice(4)] = localStorage.getItem(key);
+      }
+    } catch { /* storage unavailable: nothing to import */ }
+    window.chrome?.webview?.postMessage({ type: "migrate", items });
+  </script>
+</head>
+<body></body>
+</html>

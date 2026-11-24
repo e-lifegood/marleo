@@ -1,21 +1,23 @@
 <div align="center">
 
-<img src="assets/mdv-256.png" width="96" alt="mdv logo">
+<img src="assets/marleo-256.png" width="96" alt="Marleo logo">
 
-# mdv
+# Marleo
+
+Formerly **mdv**.
 
 **A fast, clean Markdown viewer for Windows.**<br>
 Open any `.md` file or folder straight from Explorer, read it distraction-free, highlight words in color like Notepad++,
 and jump to VS Code — at the exact line you were reading — when you want to edit.
 
-[![Build](https://github.com/e-lifegood/mdv/actions/workflows/build.yml/badge.svg)](https://github.com/e-lifegood/mdv/actions/workflows/build.yml)
-[![Release](https://img.shields.io/github/v/release/e-lifegood/mdv?display_name=tag&sort=semver)](https://github.com/e-lifegood/mdv/releases/latest)
+[![Build](https://github.com/e-lifegood/marleo/actions/workflows/build.yml/badge.svg)](https://github.com/e-lifegood/marleo/actions/workflows/build.yml)
+[![Release](https://img.shields.io/github/v/release/e-lifegood/marleo?display_name=tag&sort=semver)](https://github.com/e-lifegood/marleo/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 ![Windows 10/11](https://img.shields.io/badge/Windows-10%20%7C%2011-0078D6?logo=windows)
 
 [Install](#install) · [Features](#features) · [Shortcuts](#keyboard-shortcuts) · [Settings](#settings) · [How it works](docs/architecture.md) · [Contributing](CONTRIBUTING.md) · [Español](#en-español)
 
-<img src="docs/images/screenshot-light.png" alt="mdv showing a folder of Markdown files with three highlighted terms" width="900">
+<img src="docs/images/screenshot-light.png" alt="Marleo showing a folder of Markdown files with three highlighted terms" width="900">
 
 </div>
 
@@ -25,12 +27,14 @@ More and more of our documents are Markdown: specs, notes, prompts and context f
 plain text, diff-friendly and agent-ready — but on Windows, *reading* it comfortably is awkward. You either get raw
 text (Notepad), an editor full of chrome (VS Code), or a note-taking app that wants to own your folders (Obsidian).
 
-mdv does one thing: **show Markdown beautifully, instantly, from wherever you are in Explorer** — and gets out of the
-way when you want to edit.
+Marleo does one thing: **show Markdown beautifully, instantly, from wherever you are in Explorer** — and gets out of
+the way when you want to edit.
+
+The name says what it is for: *Marleo = **mark** (highlight) + **leo** (Spanish for "I read").*
 
 | | Opens files *and* folders from Explorer | Clean reading view | Multi-color word highlighting | Jump to editor at the same line | Live reload |
 | --- | :---: | :---: | :---: | :---: | :---: |
-| **mdv** | ✅ | ✅ | ✅ 10 colors, counts, navigation | ✅ | ✅ |
+| **Marleo** | ✅ | ✅ | ✅ 10 colors, counts, navigation | ✅ | ✅ |
 | PowerToys Peek | files only | ✅ | — | — | — |
 | Windows Notepad (Markdown mode) | files only | basic | — | — | — |
 | VS Code preview | via VS Code | side panel | editor only | ✅ | ✅ |
@@ -38,8 +42,8 @@ way when you want to edit.
 
 ## Features
 
-- **Explorer integration** — *Open with mdv* on folders, folder backgrounds and `.md` files; make it the default app
-  for `.md` so double-click opens it; type `mdv` in Explorer's address bar to open the current folder.
+- **Explorer integration** — *Open with Marleo* on folders, folder backgrounds and `.md` files; make it the default app
+  for `.md` so double-click opens it; type `marleo` in Explorer's address bar to open the current folder.
 - **Clean, fast reading** — comfortable typography, light/dark themes (follows Windows), outline with scroll-spy,
   folder tree with quick filter (<kbd>Ctrl</kbd>+<kbd>P</kbd>), back/forward history, zoom, print to PDF.
   Remembers where you were in every file.
@@ -55,61 +59,65 @@ way when you want to edit.
 - **Small and private** — a native .NET + WebView2 app (~2 MB plus libraries), no telemetry, no network access, works
   offline. Your files are never modified.
 
-<div align="center"><img src="docs/images/screenshot-dark.png" alt="mdv in dark mode with highlighted code" width="900"></div>
+<div align="center"><img src="docs/images/screenshot-dark.png" alt="Marleo in dark mode with highlighted code" width="900"></div>
 
 ## Install
 
 **One line** (PowerShell, no admin rights):
 
 ```powershell
-irm https://github.com/e-lifegood/mdv/releases/latest/download/install.ps1 | iex
+irm https://github.com/e-lifegood/marleo/releases/latest/download/install.ps1 | iex
 ```
 
-It installs to `%LOCALAPPDATA%\Programs\mdv` and registers mdv with Explorer. If the
+It installs to `%LOCALAPPDATA%\Programs\marleo` and registers Marleo with Explorer. If the
 [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0) is present it downloads the small build,
-otherwise the standalone one.
+otherwise the standalone one. Upgrading from **mdv** 0.1.0? Run the same line: it removes the old install and
+Marleo brings over your settings, window position, view preferences and saved highlight sets.
 
-**Manual:** download `mdv-win-x64.zip` (needs .NET 10 Desktop Runtime) or `mdv-win-x64-standalone.zip` from
-[Releases](https://github.com/e-lifegood/mdv/releases), unzip anywhere and run `mdv.exe --register`.
+**Manual:** download `marleo-win-x64.zip` (needs .NET 10 Desktop Runtime) or `marleo-win-x64-standalone.zip` from
+[Releases](https://github.com/e-lifegood/marleo/releases), unzip anywhere and run `marleo.exe --register`.
 
 **From source:** needs the [.NET 10 SDK](https://dotnet.microsoft.com/download) and [Node.js](https://nodejs.org).
 
 ```powershell
-git clone https://github.com/e-lifegood/mdv.git
-cd mdv
+git clone https://github.com/e-lifegood/marleo.git
+cd marleo
 powershell -ExecutionPolicy Bypass -File install.ps1
 ```
 
 **Requirements:** Windows 10 or 11 (x64) with the Microsoft Edge WebView2 Runtime (built into Windows 11).
 
-### Make mdv open `.md` files on double-click
+### Make Marleo open `.md` files on double-click
 
 Windows does not let apps make themselves the default, so do it once: right-click any `.md` file →
-**Open with** → **Choose another app** → **mdv** → **Always**.
+**Open with** → **Choose another app** → **Marleo** → **Always**. (If you had made mdv the default, do this once again
+after upgrading.)
 
 ### Uninstall
 
 ```powershell
-mdv --unregister
-Remove-Item -Recurse "$env:LOCALAPPDATA\Programs\mdv"
+marleo --unregister
+Remove-Item -Recurse "$env:LOCALAPPDATA\Programs\marleo"
 ```
 
 ## Usage
 
 | From | Do this |
 | --- | --- |
-| Explorer, a file | Double-click a `.md` (after choosing mdv as default) or right-click → *Open with mdv* |
-| Explorer, a folder | Right-click the folder (or inside it) → *Show more options* → *Open with mdv* |
-| Explorer address bar | Type `mdv` and press <kbd>Enter</kbd> — opens the folder you are in |
-| Terminal | `mdv`, `mdv notes.md`, `mdv C:\docs` |
+| Explorer, a file | Double-click a `.md` (after choosing Marleo as default) or right-click → *Open with Marleo* |
+| Explorer, a folder | Right-click the folder (or inside it) → *Show more options* → *Open with Marleo* |
+| Explorer address bar | Type `marleo` and press <kbd>Enter</kbd> — opens the folder you are in |
+| Terminal | `marleo`, `marleo notes.md`, `marleo C:\docs` |
 | The window itself | Drag & drop a file or folder onto it |
 
 ```text
-mdv [file.md | folder] [--highlight "term1,term2"] [--theme light|dark]
-mdv --register | --unregister
+marleo [file.md | folder] [--highlight "term1,term2"] [--theme light|dark]
+marleo --register | --unregister
 ```
 
-When you open a folder, mdv shows its `README.md` (or `index.md`, or the first file) and a tree of every Markdown file
+The old command name still works: `mdv` runs Marleo in terminals, Win+R and the Explorer address bar.
+
+When you open a folder, Marleo shows its `README.md` (or `index.md`, or the first file) and a tree of every Markdown file
 below it. Links between documents work — <kbd>Ctrl</kbd>+click opens them in a new window.
 
 ## Keyboard shortcuts
@@ -144,7 +152,7 @@ Highlights stay active as you move between documents in the same window. Accente
 
 ## Settings
 
-Press <kbd>Ctrl</kbd>+<kbd>,</kbd> to open `%APPDATA%\mdv\settings.json`:
+Press <kbd>Ctrl</kbd>+<kbd>,</kbd> to open `%APPDATA%\marleo\settings.json`:
 
 ```jsonc
 {
@@ -160,7 +168,7 @@ Sublime Text → `"editorArgs": "\"{file}:{line}\""` · same VS Code window → 
 
 ## How it works
 
-mdv is a small WinForms host (C#, .NET 10) around a WebView2 control. The host reads files, watches them, builds the
+Marleo is a small WinForms host (C#, .NET 10) around a WebView2 control. The host reads files, watches them, builds the
 folder tree, talks to Explorer and launches your editor; the UI is plain HTML/CSS/JS rendering Markdown with
 [markdown-it](https://github.com/markdown-it/markdown-it), [highlight.js](https://highlightjs.org) and
 [Mermaid](https://mermaid.js.org), sanitized with [DOMPurify](https://github.com/cure53/DOMPurify). Everything is local.
@@ -181,12 +189,13 @@ menu (sparse package), a "presentation" reading mode.
 
 ## En español
 
-**mdv** es un visor de Markdown para Windows: rápido, limpio y pensado para quienes trabajan con archivos `.md`
-(documentación, notas, contexto para agentes de IA) en lugar de PDF o DOCX.
+**Marleo** (antes **mdv**) es un visor de Markdown para Windows: rápido, limpio y pensado para quienes trabajan con
+archivos `.md` (documentación, notas, contexto para agentes de IA) en lugar de PDF o DOCX. El nombre viene de
+**mar**car (resaltar) + **leo** (de leer).
 
-- **Ábrelo desde el Explorador:** clic derecho en una carpeta → *Mostrar más opciones* → *Open with mdv*; clic derecho
-  en un `.md` → *Abrir con* → *mdv* → *Siempre* (desde entonces, doble clic lo abre); o escribe `mdv` en la barra de
-  direcciones del Explorador para abrir la carpeta actual.
+- **Ábrelo desde el Explorador:** clic derecho en una carpeta → *Mostrar más opciones* → *Open with Marleo*; clic
+  derecho en un `.md` → *Abrir con* → *Marleo* → *Siempre* (desde entonces, doble clic lo abre); o escribe `marleo` en
+  la barra de direcciones del Explorador para abrir la carpeta actual. El comando `mdv` sigue funcionando.
 - **Resaltado multicolor** al estilo de Notepad++: selecciona una palabra y pulsa <kbd>H</kbd>. Hasta 10 colores,
   contador de apariciones, saltar con <kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd>, marcas en la barra de desplazamiento y
   conjuntos de palabras guardados.
@@ -197,7 +206,10 @@ menu (sparse package), a "presentation" reading mode.
 **Instalar** (PowerShell, sin permisos de administrador):
 
 ```powershell
-irm https://github.com/e-lifegood/mdv/releases/latest/download/install.ps1 | iex
+irm https://github.com/e-lifegood/marleo/releases/latest/download/install.ps1 | iex
 ```
+
+Si ya tenías mdv 0.1.0, la misma línea lo reemplaza y Marleo conserva tu configuración, tus preferencias de
+vista y tus conjuntos de resaltado.
 
 Es software libre (licencia MIT): úsalo, modifícalo y comparte tus mejoras. ¡Las contribuciones son bienvenidas!

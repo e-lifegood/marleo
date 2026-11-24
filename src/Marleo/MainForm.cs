@@ -7,7 +7,7 @@ using Microsoft.Web.WebView2.Core;
 using Microsoft.Web.WebView2.WinForms;
 using Microsoft.Win32;
 
-namespace Mdv;
+namespace Marleo;
 
 /// <summary>
 /// The viewer window: a WebView2 that hosts the web UI (web/index.html) plus the native glue —
@@ -17,8 +17,8 @@ namespace Mdv;
 /// </summary>
 internal sealed class MainForm : Form
 {
-    private const string AppHost = "app.mdv";     // web/ folder (the UI itself)
-    private const string FileHost = "local.mdv";  // images & media referenced by documents
+    private const string AppHost = "app.marleo";     // web/ folder (the UI itself)
+    private const string FileHost = "local.marleo";  // images & media referenced by documents
 
 
     private readonly LaunchOptions _options;
@@ -37,12 +37,13 @@ internal sealed class MainForm : Form
     private bool _firstRenderDone;
     private bool _settledDone;
     private Mutex? _instance;
+    private TaskCompletionSource<JsonObject?>? _legacyStorage; // set while importing v0.1.0 localStorage
 
     public MainForm(LaunchOptions options)
     {
         _options = options;
         Mark("ctor");
-        Text = "mdv";
+        Text = "Marleo";
         Icon = LoadAppIcon();
         Mark("icon");
         _dark = options.Theme switch { "dark" => true, "light" => false, _ => SystemUsesDarkTheme() };
@@ -95,24 +96,24 @@ internal sealed class MainForm : Form
         }
         catch (WebView2RuntimeNotFoundException)
         {
-            MessageBox.Show("mdv needs the Microsoft Edge WebView2 Runtime.\nIt ships with Windows 11; on older systems install it from:\nhttps://developer.microsoft.com/microsoft-edge/webview2/",
-                "mdv", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show("Marleo needs the Microsoft Edge WebView2 Runtime.\nIt ships with Windows 11; on older systems install it from:\nhttps://developer.microsoft.com/microsoft-edge/webview2/",
+                "Marleo", MessageBoxButtons.OK, MessageBoxIcon.Error);
             Close();
         }
     }
 
     private async Task InitWebViewAsync()
     {
-        // One shared profile folder: a second mdv window reuses the running browser process → opens faster.
+        // One shared profile folder: a second Marleo window reuses the running browser process → opens faster.
         Mark("load");
         // A viewer needs none of the browser's background services: skipping them shortens cold start.
-        // (Every mdv window must pass identical options, otherwise WebView2 refuses to share the profile.)
+        // (Every Marleo window must pass identical options, otherwise WebView2 refuses to share the profile.)
         var options = new CoreWebView2EnvironmentOptions
         {
             AdditionalBrowserArguments = "--disable-background-networking --disable-component-update --disable-sync " +
                                          "--disable-features=msSmartScreenProtection,msWebOOUI,msPdfOOUI,Translate,AutofillServerCommunication",
         };
-        var env = await CoreWebView2Environment.CreateAsync(null, Path.Combine(AppInfo.LocalDataDir, "WebView2"), options);
+        var env = await CoreWebView2Environment.CreateAsync(null, AppInfo.WebViewProfileDir, options);
         Mark("env");
         await _web.EnsureCoreWebView2Async(env);
         Mark("controller");
@@ -126,14 +127,15 @@ internal sealed class MainForm : Form
         s.IsGeneralAutofillEnabled = false;
         s.AreDevToolsEnabled = true;                // F12, handy for contributors
 
-        core.SetVirtualHostNameToFolderMapping(AppHost, Path.Combine(AppContext.BaseDirectory, "web"),
-            CoreWebView2HostResourceAccessKind.DenyCors);
+        var webDir = Path.Combine(AppContext.BaseDirectory, "web");
+        core.SetVirtualHostNameToFolderMapping(AppHost, webDir, CoreWebView2HostResourceAccessKind.DenyCors);
         core.AddWebResourceRequestedFilter($"https://{FileHost}/*", CoreWebView2WebResourceContext.All);
         core.WebResourceRequested += OnWebResourceRequested;
         core.WebMessageReceived += OnWebMessage;
         core.NavigationStarting += OnNavigationStarting;
         core.NewWindowRequested += (_, a) => { a.Handled = true; OpenExternal(a.Uri); };
 
+        if (LegacyMigration.StorageImportPending) await ImportLegacyStorageAsync(core, webDir);
         core.Navigate($"https://{AppHost}/index.html");
 
         // Screenshot/test runs must always finish, even if the page never reports back.
@@ -144,6 +146,49 @@ internal sealed class MainForm : Form
         }
     }
 
+    /// <summary>
+    /// One-time upgrade from v0.1.0 (mdv), whose UI kept theme, zoom, reading positions and highlight sets in
+    /// localStorage under https://app.mdv. <see cref="LegacyMigration"/> copied that storage into this profile; here
+    /// the old origin is mapped for a moment to load web/migrate.html, which posts every "mdv.*" key back. The keys
+    /// are then replayed as "marleo.*" by a script that runs on https://app.marleo before the UI's own scripts.
+    /// Gives up after 3 s: the UI then simply starts with its defaults.
+    /// </summary>
+    private async Task ImportLegacyStorageAsync(CoreWebView2 core, string webDir)
+    {
+        try
+        {
+            _legacyStorage = new TaskCompletionSource<JsonObject?>();
+            core.SetVirtualHostNameToFolderMapping(LegacyMigration.AppHost, webDir, CoreWebView2HostResourceAccessKind.DenyCors);
+            core.Navigate($"https://{LegacyMigration.AppHost}/migrate.html");
+            var done = await Task.WhenAny(_legacyStorage.Task, Task.Delay(3000));
+            var items = done == _legacyStorage.Task ? _legacyStorage.Task.Result : null;
+            core.ClearVirtualHostNameToFolderMapping(LegacyMigration.AppHost);
+
+            if (items is { Count: > 0 })
+            {
+                await core.AddScriptToExecuteOnDocumentCreatedAsync(
+                    $$"""
+                    (() => {
+                      if (location.host !== "{{AppHost}}") return;
+                      try {
+                        if (localStorage.getItem("marleo.migrated")) return;
+                        for (const [k, v] of Object.entries({{items.ToJsonString()}}))
+                          if (typeof v === "string" && localStorage.getItem("marleo." + k) === null) localStorage.setItem("marleo." + k, v);
+                        localStorage.setItem("marleo.migrated", "mdv");
+                      } catch { }
+                    })();
+                    """);
+            }
+            AppendLog("migration.log", $"localStorage from https://{LegacyMigration.AppHost}: {(items is null ? "no answer" : $"{items.Count} keys")}");
+        }
+        catch (Exception ex) { AppendLog("migration.log", $"localStorage import failed: {ex.Message}"); }
+        finally
+        {
+            _legacyStorage = null;
+            LegacyMigration.CompleteStorageImport();
+        }
+    }
+
     // ---------------------------------------------------------------- page → host
 
     private void OnWebMessage(object? sender, CoreWebView2WebMessageReceivedEventArgs e)
@@ -151,6 +196,13 @@ internal sealed class MainForm : Form
         JsonNode? m;
         try { m = JsonNode.Parse(e.WebMessageAsJson); } catch { return; }
         if (m is null) return;
+
+        // The only message accepted from the v0.1.0 origin, and only while its storage is being imported.
+        if (e.Source.StartsWith($"https://{LegacyMigration.AppHost}/", StringComparison.OrdinalIgnoreCase))
+        {
+            if ((string?)m["type"] == "migrate") _legacyStorage?.TrySetResult(m["items"] as JsonObject);
+            return;
+        }
 
         switch ((string?)m["type"])
         {
@@ -176,7 +228,7 @@ internal sealed class MainForm : Form
                 AppendLog("errors.log", (string?)m["message"]);
                 break;
             case "log": // dev/test channel used by tests/*.js
-                AppendLog("mdv.log", (string?)m["message"]);
+                AppendLog("marleo.log", (string?)m["message"]);
                 break;
             case "open":
                 OpenPath((string?)m["path"], (string?)m["hash"], (bool?)m["newWindow"] ?? false);
@@ -226,8 +278,10 @@ internal sealed class MainForm : Form
         }
     }
 
-    // MDV_TRACE=1 logs startup phases (ms since Main) to %LOCALAPPDATA%\mdv\startup.log
-    private static readonly bool Trace = Environment.GetEnvironmentVariable("MDV_TRACE") == "1";
+    // MARLEO_TRACE=1 logs startup phases (ms since Main) to %LOCALAPPDATA%\marleo\startup.log
+    // (MDV_TRACE, the pre-0.2.0 name, is still accepted).
+    private static readonly bool Trace =
+        Environment.GetEnvironmentVariable("MARLEO_TRACE") == "1" || Environment.GetEnvironmentVariable("MDV_TRACE") == "1";
     private readonly List<string> _marks = [];
     private void Mark(string phase) { if (Trace) _marks.Add($"{phase}={Program.Clock.ElapsedMilliseconds}"); }
 
@@ -309,7 +363,7 @@ internal sealed class MainForm : Form
         {
             ["type"] = "tree",
             ["root"] = root,
-            ["tree"] = JsonSerializer.SerializeToNode(tree, MdvJson.Default.TreeNode),
+            ["tree"] = JsonSerializer.SerializeToNode(tree, MarleoJson.Default.TreeNode),
             ["truncated"] = truncated,
         });
         WatchTree(truncated);
@@ -563,7 +617,7 @@ internal sealed class MainForm : Form
     };
 
     /// <summary>
-    /// Serves https://local.mdv/C:/path/to/image.png from disk. Only media types are served,
+    /// Serves https://local.marleo/C:/path/to/image.png from disk. Only media types are served,
     /// so a document can show its images but cannot read arbitrary files.
     /// </summary>
     private void OnWebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
@@ -595,6 +649,7 @@ internal sealed class MainForm : Form
     private void OnNavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
     {
         if (e.Uri.StartsWith($"https://{AppHost}/", StringComparison.OrdinalIgnoreCase)) return;
+        if (_legacyStorage != null && e.Uri.Equals($"https://{LegacyMigration.AppHost}/migrate.html", StringComparison.OrdinalIgnoreCase)) return;
         e.Cancel = true; // the viewer never navigates away from its UI
         if (e.Uri.StartsWith("http", StringComparison.OrdinalIgnoreCase) || e.Uri.StartsWith("mailto:", StringComparison.OrdinalIgnoreCase))
             OpenExternal(e.Uri);
@@ -624,7 +679,7 @@ internal sealed class MainForm : Form
     private void UpdateTitle()
     {
         var name = _current != null ? Path.GetFileName(_current) : Path.GetFileName(_root.TrimEnd('\\'));
-        Text = string.IsNullOrEmpty(name) ? "mdv" : $"{name} — mdv";
+        Text = string.IsNullOrEmpty(name) ? "Marleo" : $"{name} — Marleo";
     }
 
     private void ApplyBackground()
@@ -662,7 +717,7 @@ internal sealed class MainForm : Form
     {
         try
         {
-            var ico = Path.Combine(AppContext.BaseDirectory, "mdv.ico");
+            var ico = Path.Combine(AppContext.BaseDirectory, "marleo.ico");
             return File.Exists(ico) ? new Icon(ico) : Icon.ExtractAssociatedIcon(Environment.ProcessPath!);
         }
         catch { return null; }
@@ -685,8 +740,8 @@ internal sealed class MainForm : Form
             return;
         }
 
-        // Cascade when another mdv window is already open (a named mutex is much cheaper than listing processes).
-        _instance = new Mutex(false, @"Local\mdv-window", out bool first);
+        // Cascade when another Marleo window is already open (a named mutex is much cheaper than listing processes).
+        _instance = new Mutex(false, @"Local\marleo-window", out bool first);
         int offset = first ? 0 : 28 * Random.Shared.Next(1, 6);
         var bounds = new Rectangle(st.X + offset, st.Y + offset, st.Width, st.Height);
         if (Screen.AllScreens.Any(s => s.WorkingArea.IntersectsWith(bounds)))
