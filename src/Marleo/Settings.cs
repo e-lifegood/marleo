@@ -59,7 +59,7 @@ internal sealed class WindowPlacement
     public int Height { get; set; } = 860;
     public bool Maximized { get; set; }
 
-    private static string FilePath => Path.Combine(AppInfo.LocalDataDir, "window.json");
+    public static string FilePath => Path.Combine(AppInfo.LocalDataDir, "window.json");
 
     public static WindowPlacement? Load()
     {

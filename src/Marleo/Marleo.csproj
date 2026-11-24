@@ -37,6 +37,8 @@
   <ItemGroup>
     <None Include="$(RepoRoot)web\**\*" LinkBase="web" CopyToOutputDirectory="PreserveNewest" />
     <None Include="$(RepoRoot)assets\marleo.ico" Link="marleo.ico" CopyToOutputDirectory="PreserveNewest" />
+    <!-- `mdv` keeps working in terminals (the app was called mdv up to v0.1.0). -->
+    <None Update="mdv.cmd" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Fetch the front-end libraries automatically the first time you build from a fresh clone. -->

@@ -10,21 +10,49 @@ namespace Marleo;
 ///  • ProgID "marleo.md" + OpenWithProgids for .md/.markdown → Marleo appears in "Open with".
 ///  • Default Apps capabilities → Marleo appears in Settings › Apps › Default apps.
 ///  • "Open with Marleo" on .md files, on folders and on folder backgrounds.
-///  • App Paths entry → typing `marleo` in Explorer's address bar or Win+R works.
-///  • The install folder on the user PATH → `marleo` works in any terminal.
+///  • App Paths entries → typing `marleo` (or the pre-0.2.0 name `mdv`) in Explorer's address bar or Win+R works.
+///  • The install folder on the user PATH → `marleo` (and `mdv`, via the mdv.cmd shim) works in any terminal.
 ///
 /// Windows 11 does not let an app make itself the default handler. The user picks Marleo once
 /// (Open with → Choose another app → Marleo → Always) and from then on double-click opens Marleo.
+///
+/// Up to v0.1.0 the app was called mdv; <see cref="RemoveLegacyEntries"/> removes what that version registered.
 /// </summary>
 internal static class ShellIntegration
 {
     private const string ProgId = "marleo.md";
     private const string VerbKey = "marleo";
     private const string VerbLabel = "Open with Marleo";
+    private const string AppKey = @"Software\Marleo";
+    private const string RegisteredName = "Marleo";
+    private const string ExeName = "marleo.exe";
     private static readonly string[] Extensions = [".md", ".markdown"];
+    private static readonly string[] FolderTargets = [@"Directory\shell", @"Directory\Background\shell", @"Drive\shell"];
+    private const string AppPaths = @"Software\Microsoft\Windows\CurrentVersion\App Paths";
+
+    // What v0.1.0 (mdv) registered.
+    private const string LegacyProgId = "mdv.md";
+    private const string LegacyVerbKey = "mdv";
+    private const string LegacyAppKey = @"Software\mdv";
+    private const string LegacyRegisteredName = "mdv";
+    private const string LegacyExeName = "mdv.exe";
+
+    /// <summary>The command alias kept for v0.1.0 habits: `mdv` in Win+R / the address bar runs marleo.exe.</summary>
+    private const string AliasExeName = LegacyExeName;
+
+    public static bool IsRegistered
+    {
+        get
+        {
+            using var k = Registry.CurrentUser.OpenSubKey($@"Software\Classes\{ProgId}");
+            return k != null;
+        }
+    }
 
     public static void Register(string exePath)
     {
+        RemoveLegacyEntries(Path.GetDirectoryName(exePath));
+
         string cmdFile = $"\"{exePath}\" \"%1\"";
         string cmdDir = $"\"{exePath}\" \"%V\"";
         string icon = $"\"{exePath}\",0";
@@ -54,7 +82,7 @@ internal static class ShellIntegration
         }
 
         // Applications\marleo.exe — how "Open with" lists the app.
-        using (var k = classes.CreateSubKey(@"Applications\marleo.exe"))
+        using (var k = classes.CreateSubKey($@"Applications\{ExeName}"))
         {
             k.SetValue("FriendlyAppName", "Marleo — Markdown viewer");
             k.CreateSubKey(@"shell\open\command").SetValue("", cmdFile);
@@ -63,7 +91,7 @@ internal static class ShellIntegration
         }
 
         // Folder and folder-background context menus.
-        foreach (var target in new[] { @"Directory\shell", @"Directory\Background\shell", @"Drive\shell" })
+        foreach (var target in FolderTargets)
         {
             using var k = classes.CreateSubKey($@"{target}\{VerbKey}");
             k.SetValue("", VerbLabel);
@@ -72,7 +100,7 @@ internal static class ShellIntegration
         }
 
         // Default Apps (Settings) capabilities.
-        using (var cap = Registry.CurrentUser.CreateSubKey(@"Software\Marleo\Capabilities"))
+        using (var cap = Registry.CurrentUser.CreateSubKey($@"{AppKey}\Capabilities"))
         {
             cap.SetValue("ApplicationName", "Marleo");
             cap.SetValue("ApplicationDescription", "Fast, clean Markdown viewer");
@@ -81,11 +109,12 @@ internal static class ShellIntegration
             foreach (var ext in Extensions) fa.SetValue(ext, ProgId);
         }
         using (var reg = Registry.CurrentUser.CreateSubKey(@"Software\RegisteredApplications"))
-            reg.SetValue("Marleo", @"Software\Marleo\Capabilities");
+            reg.SetValue(RegisteredName, $@"{AppKey}\Capabilities");
 
-        // App Paths: `marleo` from Win+R / Explorer address bar.
-        using (var k = Registry.CurrentUser.CreateSubKey(@"Software\Microsoft\Windows\CurrentVersion\App Paths\marleo.exe"))
+        // App Paths: `marleo` — and the alias `mdv` — from Win+R / Explorer address bar.
+        foreach (var name in new[] { ExeName, AliasExeName })
         {
+            using var k = Registry.CurrentUser.CreateSubKey($@"{AppPaths}\{name}");
             k.SetValue("", exePath);
             k.SetValue("Path", Path.GetDirectoryName(exePath)!);
         }
@@ -94,30 +123,69 @@ internal static class ShellIntegration
         NotifyShell();
     }
 
+    /// <summary>Removes everything <see cref="Register"/> added, plus anything left by v0.1.0 (mdv).</summary>
     public static void Unregister()
     {
-        using var classes = Registry.CurrentUser.OpenSubKey(@"Software\Classes", writable: true);
-        if (classes != null)
+        string? dir = Environment.ProcessPath is { } exe ? Path.GetDirectoryName(exe) : null;
+        RemoveEntries(ProgId, VerbKey, ExeName, AppKey, RegisteredName);
+        Registry.CurrentUser.DeleteSubKeyTree($@"{AppPaths}\{ExeName}", false);
+        Registry.CurrentUser.DeleteSubKeyTree($@"{AppPaths}\{AliasExeName}", false);
+        if (dir != null) RemoveFromUserPath(dir);
+        RemoveLegacyEntries(dir);
+        NotifyShell();
+    }
+
+    /// <summary>
+    /// Removes what v0.1.0 (when the app was called mdv) registered: ProgID mdv.md, its OpenWithProgids values, the
+    /// "Open with mdv" verbs, Applications\mdv.exe, Software\mdv + its RegisteredApplications value, the App Paths
+    /// entry when it still points to the old mdv.exe (from 0.2.0 on it is the alias for marleo.exe) and the old
+    /// install folder on the user PATH. Idempotent; <paramref name="currentDir"/> (Marleo's own folder) is never
+    /// taken off PATH, in case Marleo was unzipped over the old install.
+    /// </summary>
+    public static void RemoveLegacyEntries(string? currentDir)
+    {
+        RemoveEntries(LegacyProgId, LegacyVerbKey, LegacyExeName, LegacyAppKey, LegacyRegisteredName);
+
+        var legacyDirs = new List<string>
         {
-            classes.DeleteSubKeyTree(ProgId, false);
-            classes.DeleteSubKeyTree(@"Applications\marleo.exe", false);
-            foreach (var ext in Extensions)
-            {
-                using (var k = classes.OpenSubKey($@"{ext}\OpenWithProgids", writable: true))
-                    k?.DeleteValue(ProgId, false);
-                classes.DeleteSubKeyTree($@"SystemFileAssociations\{ext}\shell\{VerbKey}", false);
-            }
-            foreach (var target in new[] { @"Directory\shell", @"Directory\Background\shell", @"Drive\shell" })
-                classes.DeleteSubKeyTree($@"{target}\{VerbKey}", false);
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Programs", "mdv"),
+        };
+        string legacyAppPath = $@"{AppPaths}\{LegacyExeName}";
+        string? oldExe;
+        using (var k = Registry.CurrentUser.OpenSubKey(legacyAppPath))
+            oldExe = k?.GetValue("") as string;
+        if (oldExe != null && !oldExe.Trim('"').EndsWith(@"\" + ExeName, StringComparison.OrdinalIgnoreCase))
+        {
+            if (Path.GetDirectoryName(oldExe.Trim('"')) is { Length: > 0 } d) legacyDirs.Add(d);
+            Registry.CurrentUser.DeleteSubKeyTree(legacyAppPath, false);
         }
 
-        Registry.CurrentUser.DeleteSubKeyTree(@"Software\Marleo", false);
-        using (var reg = Registry.CurrentUser.OpenSubKey(@"Software\RegisteredApplications", writable: true))
-            reg?.DeleteValue("Marleo", false);
-        Registry.CurrentUser.DeleteSubKeyTree(@"Software\Microsoft\Windows\CurrentVersion\App Paths\marleo.exe", false);
+        foreach (var d in legacyDirs)
+            if (currentDir is null || !PathEquals(d, currentDir)) RemoveFromUserPath(d);
+    }
 
-        if (Environment.ProcessPath is { } exe) RemoveFromUserPath(Path.GetDirectoryName(exe)!);
-        NotifyShell();
+    private static void RemoveEntries(string progId, string verbKey, string exeName, string appKey, string registeredName)
+    {
+        using (var classes = Registry.CurrentUser.OpenSubKey(@"Software\Classes", writable: true))
+        {
+            if (classes != null)
+            {
+                classes.DeleteSubKeyTree(progId, false);
+                classes.DeleteSubKeyTree($@"Applications\{exeName}", false);
+                foreach (var ext in Extensions)
+                {
+                    using (var k = classes.OpenSubKey($@"{ext}\OpenWithProgids", writable: true))
+                        k?.DeleteValue(progId, false);
+                    classes.DeleteSubKeyTree($@"SystemFileAssociations\{ext}\shell\{verbKey}", false);
+                }
+                foreach (var target in FolderTargets)
+                    classes.DeleteSubKeyTree($@"{target}\{verbKey}", false);
+            }
+        }
+
+        Registry.CurrentUser.DeleteSubKeyTree(appKey, false);
+        using (var reg = Registry.CurrentUser.OpenSubKey(@"Software\RegisteredApplications", writable: true))
+            reg?.DeleteValue(registeredName, false);
     }
 
     // ---- PATH helpers -------------------------------------------------------------------

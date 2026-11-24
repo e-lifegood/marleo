@@ -66,6 +66,12 @@ foreach ($case in @(@("direct write", "h1=Version 2"), @("temp file + rename", "
     else { Write-Host "FAIL  live reload: $($case[0])" -ForegroundColor Red; $failed++ }
 }
 
+# --- 3. packaging --------------------------------------------------------------------
+# `mdv` (the name up to v0.1.0) keeps working in terminals through this shim.
+$shim = Join-Path (Split-Path $exe) "mdv.cmd"
+if ((Test-Path $shim) -and ((Get-Content $shim -Raw) -match 'marleo\.exe')) { Write-Host "PASS  mdv.cmd alias shipped" -ForegroundColor Green }
+else { Write-Host "FAIL  mdv.cmd alias missing next to marleo.exe" -ForegroundColor Red; $failed++ }
+
 $errors = Join-Path $env:LOCALAPPDATA "marleo\errors.log"
 if (Test-Path $errors) { Write-Host "`nJavaScript errors logged in $errors" -ForegroundColor Yellow }
 

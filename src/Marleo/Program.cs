@@ -29,11 +29,15 @@ internal static class Program
         {
             try
             {
-                if (options.Command == "register") ShellIntegration.Register(Environment.ProcessPath!);
+                if (options.Command == "register")
+                {
+                    ShellIntegration.Register(Environment.ProcessPath!);
+                    LegacyMigration.RunOnce(); // upgrading from v0.1.0 (mdv): settings, window state, localStorage
+                }
                 else ShellIntegration.Unregister();
                 if (!options.Quiet)
                     MessageBox.Show(options.Command == "register"
-                        ? "Marleo was added to Explorer.\n\n• Right-click a folder → Show more options → Open with marleo\n• Right-click a .md file → Open with → Marleo (tick \"Always\" to make it the default)\n• Type marleo (or marleo) in Explorer's address bar to open the current folder"
+                        ? "Marleo was added to Explorer.\n\n• Right-click a folder → Show more options → Open with Marleo\n• Right-click a .md file → Open with → Marleo (tick \"Always\" to make it the default)\n• Type marleo (or mdv) in Explorer's address bar or a terminal to open the current folder"
                         : "Marleo was removed from Explorer.", "Marleo", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return 0;
             }
@@ -50,6 +54,7 @@ internal static class Program
             return 0;
         }
 
+        LegacyMigration.RunOnce();
         ApplicationConfiguration.Initialize();
         Application.Run(new MainForm(options));
         return 0;
@@ -115,4 +120,7 @@ internal static class AppInfo
     /// <summary>%APPDATA%\marleo — user settings (settings.json).</summary>
     public static string RoamingDataDir { get; } =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "marleo");
+
+    /// <summary>%LOCALAPPDATA%\marleo\WebView2 — the browser profile shared by all Marleo windows.</summary>
+    public static string WebViewProfileDir => Path.Combine(LocalDataDir, "WebView2");
 }
